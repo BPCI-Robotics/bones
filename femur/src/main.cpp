@@ -1,95 +1,234 @@
-#include "main.h"
+#include "main.hpp"
 #include "lemlib/api.hpp" // IWYU pragma: keep
 
-/**
- * A callback function for LLEMU's center button.
- *
- * When this callback is fired, it will toggle line 2 of the LCD text between
- * "I was pressed!" and nothing.
- */
-void on_center_button() {
-	static bool pressed = false;
-	pressed = !pressed;
-	if (pressed) {
-		pros::lcd::set_text(2, "I was pressed!");
-	} else {
-		pros::lcd::clear_line(2);
-	}
-}
+class SelectionMenu {
+private:
+    class Option {
+    private:
+        std::vector<std::string> choices;
+        unsigned index = 0;
+        unsigned count = 0;
+    
+    public:
+        std::string name;
+        pros::Color color;
+    
+        Option (std::string name, pros::Color color, std::vector<std::string> choices)
+            : choices(choices), name(name), color(color) {
+            index = 0;
+            count = choices.size();
+        }
+    
+        const std::string value() const {
+            return choices[index];
+        }
+    
+        void next() {
+            index = (index + 1) % count;
+        }
+    
+        void prev() {
+            if (index == 0)
+                index = count - 1;
+            else
+                index--;
+        }
+    };
 
-/**
- * Runs initialization code. This occurs as soon as the program is started.
- *
- * All other competition modes are blocked by initialize; it is recommended
- * to keep execution time for this mode under a few seconds.
- */
+    unsigned count = 0;
+    std::vector<Option> options;
+    bool disabled = false;
+    void (*enter_callback)(std::unordered_map<std::string, std::string>) = nullptr;
+        
+    std::unordered_map<std::string, std::string> get_all() {
+        if (disabled)
+            return {};
+        
+        std::unordered_map<std::string, std::string> d = {};
+
+        for (const auto& option : options)
+            d[option.name] = option.value();
+        
+        return d;
+    }
+
+public:
+    void touch_callback() {
+        if (disabled)
+            return;
+
+        auto status = pros::c::screen_touch_status();
+
+        auto x = static_cast<int>(status.x);
+        auto y = static_cast<int>(status.y);
+
+        if (y < 140)
+            return;
+
+        // Integer division
+        options[x * count / 480].next();
+            
+        draw();
+
+        if (options[count - 1].value() == "ENTERED") {
+            enter_callback(get_all());
+            disabled = true;
+            return;
+        }
+    }
+
+    void on_enter(void (*callback)(std::unordered_map<std::string, std::string>)) {
+        enter_callback = callback;
+    }
+
+    void add_option(std::string name, pros::Color color, std::vector<std::string> choices) {
+        if (disabled)
+            return;
+        
+        options.insert(options.end() - 1, Option(name, color, choices));
+        count += 1;
+    }
+
+    void draw() const {
+        if (disabled)
+            return;
+
+        pros::screen::set_eraser(pros::Color::black);
+        pros::screen::erase();
+
+        /* Insha Allah this will not cause a segmentation fault */
+        for (unsigned i = 0; i < count; i++) {
+            pros::screen::set_pen(options[i].color);
+            pros::screen::print(pros::E_TEXT_MEDIUM, static_cast<int16_t>(i + 1), "%s: %s", options[i].name, options[i].value());
+        }
+        
+        constexpr int canvas_width = 480;
+        constexpr int canvas_height = 240;
+
+        int rect_width = (canvas_width - 10 * (count + 1)) / count;
+        constexpr int rect_height = 70;
+
+        for (unsigned i = 0; i < count; i++) {
+            pros::screen::set_pen(options[i].color);
+            
+            int16_t x0 = 10 + (10 + rect_width) * i;
+            int16_t y0 = canvas_height - (rect_height * 5);
+
+            pros::screen::draw_rect(
+                x0,
+                y0,
+                x0 + rect_width,
+                y0 + rect_height
+            );
+        }
+    }
+
+    SelectionMenu() {
+        add_option("Enter", pros::Color::white, std::vector<std::string> {"", "Are you sure?", "ENTERED"});
+    }
+};
+
+class Auton {
+private:
+    // TODO: add the auton configuration parameters here
+
+public:
+    Auton() {}
+    void set_config(std::unordered_map<std::string, std::string>& config) {
+        // TODO: add the code to process the user input here
+    }
+};
+
+using namespace pros;
+using namespace pros::v5;
+
+Controller controller(CONTROLLER_MASTER);
+
+// SelectionMenu menu;
+Auton auton;
+
+MotorGroup left_motors ({1, -2, 3}, v5::MotorGears::blue, v5::MotorEncoderUnits::degrees);
+MotorGroup right_motors ({-4, 5, -6}, v5::MotorGears::blue, v5::MotorEncoderUnits::degrees);
+
+// drivetrain settings
+lemlib::Drivetrain drivetrain(&left_motors,
+                              &right_motors,
+                              10, // TODO: set track width (inches)
+                              lemlib::Omniwheel::NEW_325,
+                              360, // TODO: Verify RPM
+                              2 // higher = faster, less accurate
+);
+
+// TODO: tune the PID
+// lateral PID controller
+lemlib::ControllerSettings lateral_controller( 10, // proportional gain (kP)
+                                                0, // integral gain (kI)
+                                                3, // derivative gain (kD)
+                                                3, // anti windup
+                                                1, // small error range, in inches
+                                              100, // small error range timeout, in milliseconds
+                                                3, // large error range, in inches
+                                              500, // large error range timeout, in milliseconds
+                                               20  // maximum acceleration (slew)
+);
+
+// angular PID controller
+lemlib::ControllerSettings angular_controller(  2, // proportional gain (kP)
+                                                0, // integral gain (kI)
+                                               10, // derivative gain (kD)
+                                                3, // anti windup
+                                                1, // small error range, in degrees
+                                              100, // small error range timeout, in milliseconds
+                                                3, // large error range, in degrees
+                                              500, // large error range timeout, in milliseconds
+                                                0  // maximum acceleration (slew)
+);
+
+v5::Imu imu(10);
+lemlib::OdomSensors sensors(nullptr, nullptr, nullptr, nullptr, &imu);
+
+lemlib::ExpoDriveCurve throttle_curve(3, // joystick deadband out of 127
+                                     10, // minimum output where drivetrain will move out of 127
+                                     1.019 // expo curve gain
+);
+
+lemlib::ExpoDriveCurve steer_curve(3, // joystick deadband out of 127
+                                  10, // minimum output where drivetrain will move out of 127
+                                  1.019 // expo curve gain
+);
+
+lemlib::Chassis chassis(drivetrain, 
+                        lateral_controller, 
+                        angular_controller, 
+                        sensors,
+                        &throttle_curve,
+                        &steer_curve
+);
+
 void initialize() {
-	pros::lcd::initialize();
-	pros::lcd::set_text(1, "Hello PROS User!");
+    // pros::screen::touch_callback([](){menu.touch_callback();}, TOUCH_PRESSED);
+    
+    // TODO: add the auton config stuff here
+    // menu.add_option(std::string name, pros::Color color, std::vector<std::string> choices)
 
-	pros::lcd::register_btn1_cb(on_center_button);
+    // menu.on_enter([](auto config){auton.set_config(config);});
+    
+    // menu.draw();
+    std::puts("\033[2J");
+
+    chassis.calibrate();
+    pros::delay(2000);
 }
 
-/**
- * Runs while the robot is in the disabled state of Field Management System or
- * the VEX Competition Switch, following either autonomous or opcontrol. When
- * the robot is enabled, this task will exit.
- */
-void disabled() {}
-
-/**
- * Runs after initialize(), and before autonomous when connected to the Field
- * Management System or the VEX Competition Switch. This is intended for
- * competition-specific initialization routines, such as an autonomous selector
- * on the LCD.
- *
- * This task will exit when the robot is enabled and autonomous or opcontrol
- * starts.
- */
-void competition_initialize() {}
-
-/**
- * Runs the user autonomous code. This function will be started in its own task
- * with the default priority and stack size whenever the robot is enabled via
- * the Field Management System or the VEX Competition Switch in the autonomous
- * mode. Alternatively, this function may be called in initialize or opcontrol
- * for non-competition testing purposes.
- *
- * If the robot is disabled or communications is lost, the autonomous task
- * will be stopped. Re-enabling the robot will restart the task, not re-start it
- * from where it left off.
- */
-void autonomous() {}
-
-/**
- * Runs the operator control code. This function will be started in its own task
- * with the default priority and stack size whenever the robot is enabled via
- * the Field Management System or the VEX Competition Switch in the operator
- * control mode.
- *
- * If no competition control is connected, this function will run immediately
- * following initialize().
- *
- * If the robot is disabled or communications is lost, the
- * operator control task will be stopped. Re-enabling the robot will restart the
- * task, not resume it from where it left off.
- */
 void opcontrol() {
-	pros::Controller master(pros::E_CONTROLLER_MASTER);
-	pros::MotorGroup left_mg({1, -2, 3});    // Creates a motor group with forwards ports 1 & 3 and reversed port 2
-	pros::MotorGroup right_mg({-4, 5, -6});  // Creates a motor group with forwards port 5 and reversed ports 4 & 6
+    chassis.setBrakeMode(MOTOR_BRAKE_HOLD);
 
+    while (true) {
+        pros::delay(20);
 
-	while (true) {
-		pros::lcd::print(0, "%d %d %d", (pros::lcd::read_buttons() & LCD_BTN_LEFT) >> 2,
-		                 (pros::lcd::read_buttons() & LCD_BTN_CENTER) >> 1,
-		                 (pros::lcd::read_buttons() & LCD_BTN_RIGHT) >> 0);  // Prints status of the emulated screen LCDs
+        auto left_y = controller.get_analog(ANALOG_LEFT_Y);
+        auto right_x = controller.get_analog(ANALOG_RIGHT_X);
 
-		// Arcade control scheme
-		int dir = master.get_analog(ANALOG_LEFT_Y);    // Gets amount forward/backward from left joystick
-		int turn = master.get_analog(ANALOG_RIGHT_X);  // Gets the turn left/right from right joystick
-		left_mg.move(dir - turn);                      // Sets left motor voltage
-		right_mg.move(dir + turn);                     // Sets right motor voltage
-		pros::delay(20);                               // Run for 20 ms then update
-	}
+        chassis.curvature(left_y, right_x);
+    }
 }
