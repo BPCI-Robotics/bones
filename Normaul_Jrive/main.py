@@ -33,11 +33,11 @@ left_group = MotorGroup(
     Motor(Ports.PORT6, ALL_MOTOR_CARTRIDGE, False)
 )
 
-spinners = MotorGroup(
+"""spinners = MotorGroup(
     Motor(Ports.PORT10, ALL_MOTOR_CARTRIDGE, True), #fix reverse values later
     Motor(Ports.PORT11, ALL_MOTOR_CARTRIDGE, True),
     )
-
+"""
 class DigitalOutToggleable(DigitalOut):
     def __init__(self, port, default_state=False):
         super().__init__(port)
