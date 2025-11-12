@@ -22,22 +22,17 @@ controller = Controller(PRIMARY)
 brain.screen.print("Nourmull Jdrive Tchraine!")
 
 right_group = MotorGroup(
-    Motor(Ports.PORT1, ALL_MOTOR_CARTRIDGE, True),
-    Motor(Ports.PORT2, ALL_MOTOR_CARTRIDGE, False),
-    Motor(Ports.PORT3, ALL_MOTOR_CARTRIDGE, True)
+    Motor(Ports.PORT1, ALL_MOTOR_CARTRIDGE, False),
+    Motor(Ports.PORT2, ALL_MOTOR_CARTRIDGE, True),
+    Motor(Ports.PORT3, ALL_MOTOR_CARTRIDGE, False)
             )
 
 left_group = MotorGroup(
-    Motor(Ports.PORT4, ALL_MOTOR_CARTRIDGE, False),
-    Motor(Ports.PORT5, ALL_MOTOR_CARTRIDGE, True), 
-    Motor(Ports.PORT6, ALL_MOTOR_CARTRIDGE, False)
+    Motor(Ports.PORT4, ALL_MOTOR_CARTRIDGE, True),
+    Motor(Ports.PORT5, ALL_MOTOR_CARTRIDGE, False), 
+    Motor(Ports.PORT6, ALL_MOTOR_CARTRIDGE, True)
 )
 
-"""spinners = MotorGroup(
-    Motor(Ports.PORT10, ALL_MOTOR_CARTRIDGE, True), #fix reverse values later
-    Motor(Ports.PORT11, ALL_MOTOR_CARTRIDGE, True),
-    )
-"""
 class DigitalOutToggleable(DigitalOut):
     def __init__(self, port, default_state=False):
         super().__init__(port)
@@ -49,6 +44,7 @@ class DigitalOutToggleable(DigitalOut):
         self.set(self.state)
 
 in_da_hood = DigitalOutToggleable(brain.three_wire_port.a)
+gateKeeper = DigitalOutToggleable(brain.three_wire_port.b)
 
 
 
@@ -71,15 +67,19 @@ def innit():
     bottom = Motor(Ports.PORT7, ALL_MOTOR_CARTRIDGE, False)
     top = Motor(Ports.PORT8, ALL_MOTOR_CARTRIDGE, False)
 
+    controller.buttonL1.pressed(bottom.spin, (FORWARD, 100, PERCENT))
+    controller.buttonL1.released(bottom.spin, (FORWARD, 0, PERCENT))
     controller.buttonL2.pressed(bottom.spin, (REVERSE, 100, PERCENT))
     controller.buttonL2.released(bottom.spin, (REVERSE, 0, PERCENT))
-    controller.buttonL1.pressed(top.spin, (REVERSE, 100, PERCENT))
-    controller.buttonL1.released(top.spin, (REVERSE, 0, PERCENT))
 
-    controller.buttonR2.pressed(bottom.spin, (FORWARD, 100, PERCENT))
-    controller.buttonR2.released(bottom.spin, (FORWARD, 0, PERCENT))
     controller.buttonR1.pressed(top.spin, (FORWARD, 100, PERCENT))
     controller.buttonR1.released(top.spin, (FORWARD, 0, PERCENT))
+    controller.buttonR2.pressed(top.spin, (REVERSE, 100, PERCENT))
+    controller.buttonR2.released(top.spin, (REVERSE, 0, PERCENT))
+
+    controller.buttonA.pressed(gateKeeper.toggle)
+    controller.buttonB.pressed(in_da_hood.toggle)
+    
 
 def scale_degrees(n):
     return (1/(1-0.352))*n
@@ -96,11 +96,12 @@ def loup():
         speed_stick = controller.axis3.position()
         turn_stick = controller.axis1.position()
 
-        left_velocity = speed_stick+turn_stick
-        right_velocity = speed_stick-turn_stick
+        left_velocity = speed_stick - turn_stick
+        right_velocity = speed_stick + turn_stick
 
         left_group.spin(FORWARD, left_velocity, PERCENT)
         right_group.spin(FORWARD, right_velocity, PERCENT)
 
 innit()
 competition = Competition(loup, alltaune)
+
