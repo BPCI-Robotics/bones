@@ -148,6 +148,43 @@ dt = DriveTrain( #SmartDrive
     externalGearRatio = GEAR_RATIO_MOTOR_TO_WHEEL,
 )
 
+class agitator:
+    def __init__(self, motor: Motor):
+        self.motor = motor
+
+        self.motor.set_stopping(BrakeType.HOLD)
+
+    def spin(self):
+        self.motor.spin(REVERSE, 60, PERCENT)
+
+    
+    def oscillate_unstuck(self):
+        while self.motor.is_spinning():
+            wait(20, MSEC)
+            if self.motor.velocity(RPM) == 0:
+                self.motor.spin(FORWARD, 80, PERCENT)
+                wait(0.5, SECONDS)
+                self.motor.spin(REVERSE, 80, PERCENT)
+
+            else:
+                continue
+
+    def constantly_unstuck(self):
+        Thread(self.oscillate_unstuck)
+
+weirdo = agitator(Motor(Ports.PORT10, GearSetting.RATIO_18_1, False))
+
+
+"""class smooth_auton_dt(DriveTrain):
+    def __init__(self, lm, rm, wheelTravel, trackWidth, wheelBase, units, externalGearRatio):
+        super().__init__(lm, rm, wheelTravel, trackWidth, wheelBase, units, externalGearRatio)
+        self.min_v = 20
+
+
+    def motion_profile(self, )"""
+
+
+
 
 class DigitalOutToggleable(DigitalOut):
     def __init__(self, port, default_state=False):
@@ -174,7 +211,6 @@ little_willy = DigitalOutToggleable(brain.three_wire_port.c)
 #drink_red_bull = DigitalOutToggleable(brain.three_wire_port.d)
 
 spinners = MotorGroup(bottom, top)
-
 
 
 class hawk_tuon:
@@ -244,24 +280,24 @@ class hawk_tuon:
         #top.spin(REVERSE, 100, PERCENT)
 
         if self.direction == LEFT:
-            in_da_hood.set(False)
+            in_da_hood.set(True)
             little_willy.set(False)
+            gateKeeper.set(True)
 
             #gate is closed, value = True
 
             bottom.spin(REVERSE, 100, PERCENT)
             top.spin(REVERSE, 100, PERCENT)
-            dt.drive_for(FORWARD, 1.84*13, INCHES, 67, PERCENT, True)
+            dt.drive_for(FORWARD, 1.84*11, INCHES, 45, PERCENT, True)
             wait(0.25, SECONDS)
-            dt.turn_for(LEFT, 1.10*37, DEGREES, 50, PERCENT, True)
-            dt.drive_for(FORWARD, 1.84*13, INCHES, 15, PERCENT, True)
-            wait(3, SECONDS)
-            #dt.drive_for(REVERSE, 1.84*3, INCHES, 70, PERCENT, True)
-            dt.turn_for(RIGHT, 1.10*60, DEGREES, 70, PERCENT)
-            wait(1, SECONDS)
+            dt.turn_for(LEFT, 1.10*30, DEGREES, 50, PERCENT, True)
+            dt.drive_for(FORWARD, 1.84*11, INCHES, 15, PERCENT, True)
+            dt.drive_for(FORWARD, 1.84*5, INCHES, 10, PERCENT)
+            wait(1.5, SECONDS)
+            dt.turn_for(RIGHT, 70, DEGREES, 70, PERCENT)
             top.spin(FORWARD, 100, PERCENT)
             in_da_hood.toggle()
-            dt.drive_for(FORWARD, 1.84*12, INCHES, 30, PERCENT)
+            dt.drive_for(FORWARD, 1.84*11.5, INCHES, 30, PERCENT)
             gateKeeper.set(False)
 
             wait(20, SECONDS)
@@ -298,7 +334,31 @@ class hawk_tuon:
         pass
 
     def _skills(self):
-        pass
+        little_willy.set(True)
+        in_da_hood.set(True)
+        gateKeeper.set(True)
+
+
+        bottom.spin(REVERSE, 100, PERCENT)
+        top.spin(REVERSE, 100, PERCENT)
+
+        i = 0
+        for i in range(0,6):
+            dt.drive_for(FORWARD, 1.84*3, INCHES, 50, PERCENT)
+            wait(1, SECONDS)
+            dt.drive_for(REVERSE, 1.84*3, INCHES, 30, PERCENT)
+
+            i += 1
+
+    
+    def _test(self):
+        in_da_hood.set(True)
+
+        bottom.spin(REVERSE, 100, PERCENT)
+        top.spin(REVERSE, 100, PERCENT)
+
+
+        
 
 
     def set_config(self, config: dict[str, Any]):
@@ -323,6 +383,9 @@ class hawk_tuon:
         elif config['Auton type'] == "Elims":
             self._routine_selected = self._elims
 
+        elif config['Auton type'] == "Test":
+            self._routine_selected = self._test
+
 
     def __call__(self):
         self._routine_selected()
@@ -332,7 +395,7 @@ def innit():
     menu = SelectionMenu()
     menu.add_option("Colour", Color.RED, ["Red", "Blue"])
     menu.add_option("Auton direction", Color.BLUE, ["Left", "Right"])
-    menu.add_option("Auton type", Color.PURPLE, ["Quals", "Elims", "Skills"])
+    menu.add_option("Auton type", Color.PURPLE, ["Quals", "Elims", "Skills", "Test"])
 
     menu.on_enter(hawk_tuah.set_config)
 
@@ -343,6 +406,10 @@ def innit():
 def drunk_driver():
     left_group.set_stopping(COAST)
     right_group.set_stopping(COAST)
+
+    #control for the 5.5w
+    controller.buttonR2.pressed(weirdo.spin, (REVERSE, 60, PERCENT))
+    controller.buttonR2.released(weirdo.spin, (REVERSE, 0, PERCENT))
 
     #control for top scoring
     controller.buttonL1.pressed(spinners.spin, (REVERSE, 100, PERCENT))
@@ -372,7 +439,10 @@ def drunk_driver():
         right_velocity = speed_stick - turn_stick
         left_group.spin(FORWARD, left_velocity, PERCENT)
         right_group.spin(FORWARD, right_velocity, PERCENT)
-    
+
+        #print(weirdo.motor.torque(), top.torque())
+        #the previous line was just used for testing
+
 
 """def scale_degrees(n):
     print((0.9367)*n)
