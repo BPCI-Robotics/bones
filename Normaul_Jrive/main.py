@@ -286,47 +286,34 @@ class hawk_tuon:
             #gate is closed, value = False
             #hood is up, value = False
 
-            bottom.spin(REVERSE, 100, PERCENT)
+            bottom.spin(REVERSE, 88, PERCENT)
             top.spin(REVERSE, 100, PERCENT)
 
             
             dt.drive_for(FORWARD, 1.84*3, INCHES, 30, PERCENT, True)
-            dt.drive_for(FORWARD, 1.84*5.5, INCHES, 75, PERCENT, True)
+            dt.drive_for(FORWARD, 1.84*5.5, INCHES, 55, PERCENT, True)
             dt.drive_for(FORWARD, 1.84*3.5, INCHES, 20, PERCENT, True)
             wait(0.25, SECONDS)
-            dt.turn_for(LEFT, 1.10*22, DEGREES, 20, PERCENT, True)
+            dt.turn_for(LEFT, 1.10*22, DEGREES, 15, PERCENT, True)
             dt.drive_for(FORWARD, 1.84*5, INCHES, 10, PERCENT, True)
-            dt.turn_for(LEFT, 1.10*15, DEGREES, 15, PERCENT, True)
+            dt.turn_for(LEFT, 1.10*10, DEGREES, 15, PERCENT, True)
             dt.drive_for(FORWARD, 1.84*7, INCHES, 10, PERCENT, True)
-            dt.turn_for(LEFT, 1.10*16, DEGREES, 15, PERCENT, True)
+            dt.turn_for(LEFT, 1.10*3, DEGREES, 15, PERCENT, True)
             dt.drive_for(FORWARD, 1.84*3, INCHES, 10, PERCENT)
-            dt.turn_for(RIGHT, 1.10*8, DEGREES, 30, PERCENT)
+            dt.turn_for(RIGHT, 1.10*3, DEGREES, 30, PERCENT)
             wait(1, SECONDS)
-            dt.turn_for(RIGHT, 89, DEGREES, 70, PERCENT)
+            dt.turn_for(RIGHT, 70.0067, DEGREES, 70, PERCENT)
 
             dt.drive_for(FORWARD, 1.84*3.5, INCHES, 30, PERCENT)
             dt.drive_for(FORWARD, 1.84*5.5, INCHES, 65, PERCENT)
-            dt.drive_for(FORWARD, 1.84*4, INCHES, 40, PERCENT)
-            dt.drive_for(REVERSE, 1.84*1, INCHES, 40, PERCENT)
-
-        
-            top.spin(FORWARD, 20, PERCENT)
+            dt.drive_for(FORWARD, 1.84*3.80067, INCHES, 40, PERCENT)
             
+            top.spin(FORWARD, 50, PERCENT)
+            bottom.spin(REVERSE, 85, PERCENT)
+
             in_da_hood.toggle()
-            gateKeeper.set(True)
-
+            gateKeeper.toggle()
             
-
-            #dt.drive_for(REVERSE, 1.84*6, INCHES, 75, PERCENT)
-            #dt.drive_for(FORWARD, 1.84*4, INCHES, 65, PERCENT)
-            #dt.turn_for(LEFT, 1.10*2, DEGREES, 40, PERCENT)
-
-            wait(0.2, SECONDS)
-            #bottom.spin(REVERSE, 90, PERCENT)
-            #top.spin(REVERSE, 90, PERCENT)
-            
-
-            wait(10, SECONDS)
 
         
         elif self.direction == RIGHT:
@@ -356,18 +343,21 @@ class hawk_tuon:
             dt.drive_for(FORWARD, 1.84*3, INCHES, 10, PERCENT)
             dt.turn_for(LEFT, 1.10*8, DEGREES, 30, PERCENT)
             wait(1, SECONDS)
-            dt.turn_for(LEFT, 89, DEGREES, 70, PERCENT)
+            dt.turn_for(LEFT, 89.5, DEGREES, 70, PERCENT)
 
             dt.drive_for(FORWARD, 1.84*3.5, INCHES, 30, PERCENT)
             dt.drive_for(FORWARD, 1.84*5.5, INCHES, 65, PERCENT)
-            dt.drive_for(FORWARD, 1.84*4, INCHES, 40, PERCENT)
-            dt.drive_for(REVERSE, 1.84*1, INCHES, 40, PERCENT)
+            dt.drive_for(FORWARD, 1.84*4.5, INCHES, 40, PERCENT)
 
-            top.spin(REVERSE, 0, PERCENT)
-            bottom.spin(FORWARD, 100, PERCENT)
+            top.spin(FORWARD, 0, PERCENT)
+            bottom.spin(FORWARD, 80, PERCENT)
 
             in_da_hood.toggle()
-            gateKeeper.set(True)
+            gateKeeper.toggle()
+            
+
+        
+            
 
 
         
@@ -400,6 +390,13 @@ class hawk_tuon:
     def _nothing(self):
         dt.drive_for(FORWARD, 1.84*3, INCHES, 20, PERCENT)
 
+    
+    def _test(self):
+        gateKeeper.set(False)
+        wait(3, SECONDS)
+        gateKeeper.toggle()
+        
+
 
 
 
@@ -429,6 +426,9 @@ class hawk_tuon:
         elif config['Auton type'] == "Nothing":
             self._routine_selected = self._nothing
 
+        elif config["Auton type"] == "Test":
+            self._routine_selected = self._test
+
 
     def __call__(self):
         self._routine_selected()
@@ -438,7 +438,7 @@ def innit():
     menu = SelectionMenu()
     menu.add_option("Colour", Color.RED, ["Red", "Blue"])
     menu.add_option("Auton direction", Color.BLUE, ["Left", "Right"])
-    menu.add_option("Auton type", Color.PURPLE, ["Quals", "Elims", "Skills", "Nothing"])
+    menu.add_option("Auton type", Color.PURPLE, ["Quals", "Elims", "Skills", "Nothing", "Test"])
 
     menu.on_enter(hawk_tuah.set_config)
 
