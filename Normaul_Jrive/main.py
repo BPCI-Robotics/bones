@@ -122,7 +122,7 @@ GEAR_RATIO_MOTOR_TO_WHEEL = 48/36
 
 DRIVETRAIN_SCALE_FACTOR = 1.84 #for auton
 
-i_hate_MU = Inertial(Ports.PORT9)
+#i_hate_MU = Inertial(Ports.PORT9)
 
 right_group = MotorGroup(
     Motor(Ports.PORT4, ALL_MOTOR_CARTRIDGE, True), 
@@ -147,6 +147,37 @@ dt = DriveTrain( #SmartDrive
     units = MM,
     externalGearRatio = GEAR_RATIO_MOTOR_TO_WHEEL,
 )
+
+
+"""class spinner:
+    def __init__(self, motor: Motor):
+
+        self.motor = motor
+
+        self.motor.set_stopping(BrakeType.HOLD)
+
+
+    def reverse_direction(self):
+        if self.motor.direction() == DirectionType.FORWARD:
+            self.motor.spin_for(REVERSE, 1080, DEGREES, 100, PERCENT)
+
+        elif self.motor.direction() == DirectionType.REVERSE:
+            self.motor.spin_for(FORWARD, 1080, DEGREES, 100, PERCENT)
+
+    def oscillate_unstuck(self):
+        while self.motor.is_spinning():
+            if self.motor.velocity(RPM) == 0:
+                self.motor.spin(self.motor.direction(), 80, PERCENT)
+                wait(200, MSEC)
+                self.reverse_direction()
+
+            wait(20, MSEC)
+
+        pass
+
+
+    def constantly_unstuck(self):
+        self._constant_thread = Thread(self.oscillate_unstuck)"""
 
 
 
@@ -201,13 +232,16 @@ brain.screen.print("dont_select.py")
 
 bottom = Motor(Ports.PORT8, ALL_MOTOR_CARTRIDGE, False)
 top = Motor(Ports.PORT7, ALL_MOTOR_CARTRIDGE, False) 
+#indexer = Motor(Ports.PORT10, GearSetting.RATIO_18_1, False)
+
 #weirdo = Motor(Ports.PORT10, GearSetting.RATIO_18_1, True)
 in_da_hood = DigitalOutToggleable(brain.three_wire_port.a)
-gateKeeper = DigitalOutToggleable(brain.three_wire_port.b)
+pto = DigitalOutToggleable(brain.three_wire_port.b)
 little_willy = DigitalOutToggleable(brain.three_wire_port.c)
 red_bull = DigitalOutToggleable(brain.three_wire_port.d)
 spinners = MotorGroup(bottom, top)
 
+#bottom_spinner = spinner(bottom)
 
 class hawk_tuon:
     def __init__(self):
@@ -279,14 +313,14 @@ class hawk_tuon:
             in_da_hood.set(False)
             red_bull.set(False)
             little_willy.set(False)
-            gateKeeper.set(False)
+            pto.set(True)
 
 
             #NOTED TO SELF
             #gate is closed, value = False
             #hood is up, value = False
 
-            bottom.spin(REVERSE, 88, PERCENT)
+            bottom.spin(REVERSE, 100, PERCENT)
             top.spin(REVERSE, 100, PERCENT)
 
             
@@ -302,17 +336,17 @@ class hawk_tuon:
             dt.drive_for(FORWARD, 1.84*3, INCHES, 10, PERCENT)
             dt.turn_for(RIGHT, 1.10*3, DEGREES, 30, PERCENT)
             wait(1, SECONDS)
-            dt.turn_for(RIGHT, 70.0067, DEGREES, 70, PERCENT)
+            dt.turn_for(RIGHT, 73, DEGREES, 70, PERCENT)
 
             dt.drive_for(FORWARD, 1.84*3.5, INCHES, 30, PERCENT)
             dt.drive_for(FORWARD, 1.84*5.5, INCHES, 65, PERCENT)
-            dt.drive_for(FORWARD, 1.84*3.80067, INCHES, 40, PERCENT)
+            dt.drive_for(FORWARD, 1.84*3.8, INCHES, 40, PERCENT)
             
             top.spin(FORWARD, 50, PERCENT)
-            bottom.spin(REVERSE, 85, PERCENT)
+            bottom.spin(REVERSE, 100, PERCENT)
 
             in_da_hood.toggle()
-            gateKeeper.toggle()
+            pto.toggle()
             
 
         
@@ -320,7 +354,7 @@ class hawk_tuon:
             in_da_hood.set(False)
             red_bull.set(False)
             little_willy.set(False)
-            gateKeeper.set(False)
+            pto.set(True)
 
 
             #NOTED TO SELF
@@ -343,7 +377,7 @@ class hawk_tuon:
             dt.drive_for(FORWARD, 1.84*3, INCHES, 10, PERCENT)
             dt.turn_for(LEFT, 1.10*8, DEGREES, 30, PERCENT)
             wait(1, SECONDS)
-            dt.turn_for(LEFT, 89.5, DEGREES, 70, PERCENT)
+            dt.turn_for(LEFT, 93.5, DEGREES, 70, PERCENT)
 
             dt.drive_for(FORWARD, 1.84*3.5, INCHES, 30, PERCENT)
             dt.drive_for(FORWARD, 1.84*5.5, INCHES, 65, PERCENT)
@@ -353,7 +387,7 @@ class hawk_tuon:
             bottom.spin(FORWARD, 80, PERCENT)
 
             in_da_hood.toggle()
-            gateKeeper.toggle()
+            pto.set(False)
             
 
         
@@ -370,21 +404,65 @@ class hawk_tuon:
         pass
 
     def _skills(self):
-        little_willy.set(True)
-        in_da_hood.set(True)
-        gateKeeper.set(True)
+        little_willy.set(False)
+        in_da_hood.set(False)
+        pto.set(True)
 
+        #bottom_spinner.constantly_unstuck()
+        bottom.spin(FORWARD, 100, PERCENT)
+        dt.drive_for(REVERSE, 1.84*4, INCHES, 100, PERCENT, True)
+        dt.drive_for(FORWARD, 1.84*6.7, INCHES,100, PERCENT, True)
+        wait (0.2, SECONDS)        
+        dt.drive_for(FORWARD, 1.84*24, INCHES,100, PERCENT, True)
+
+        """dt.drive_for(FORWARD, 1.84*31.85, INCHES, 30, PERCENT)
+        wait(0.5, SECONDS)
+        dt.turn_for(RIGHT, 89, DEGREES, 35, PERCENT, wait=True)
 
         bottom.spin(REVERSE, 100, PERCENT)
         top.spin(REVERSE, 100, PERCENT)
 
+        dt.drive_for(FORWARD, 1.84*7.5, INCHES, 25, PERCENT)
+
         i = 0
-        for i in range(0,6):
-            dt.drive_for(FORWARD, 1.84*3, INCHES, 50, PERCENT)
-            wait(1, SECONDS)
-            dt.drive_for(REVERSE, 1.84*3, INCHES, 30, PERCENT)
+        for i in range(0,7):
+            dt.drive_for(FORWARD, 1.84*1.55, INCHES, 24, PERCENT)
+            wait(0.1, SECONDS)
+            dt.drive_for(REVERSE, 1.84*1.55, INCHES, 24, PERCENT)
+            wait(0.7, SECONDS)
 
             i += 1
+
+    
+        wait(0.2, SECONDS)
+
+        dt.drive_for(REVERSE, 1.84*8, INCHES, 30, PERCENT)
+        little_willy.set(False)
+        wait(0.5, SECONDS)
+        dt.turn_for(RIGHT, 1.10*175, DEGREES, 30, PERCENT)
+        wait(0.5, SECONDS)
+
+        dt.drive_for(FORWARD, 1.84*11.7, INCHES, 30, PERCENT)
+        #dt.drive_for(REVERSE, 1.84*3, INCHES, 65, PERCENT)
+        #dt.drive_for(FORWARD, 1.84*3.35, INCHES, 30, PERCENT)
+        
+        in_da_hood.set(True)
+        pto.set(False)
+        wait(12, SECONDS)
+
+        pto.set(True)
+        dt.drive_for(REVERSE, 1.84*10, INCHES, 40, PERCENT)
+        in_da_hood.toggle()
+        dt.drive_for(REVERSE, 1.84*2, INCHES, 40, PERCENT)
+        wait(0.2, SECONDS)
+        dt.turn_for(RIGHT, 1.10*85, DEGREES, 40, PERCENT)
+        dt.drive_for(REVERSE, 1.84*10, INCHES, 40, PERCENT)
+        dt.turn_for(LEFT, 1.10*25, DEGREES, 30, PERCENT)
+        dt.drive_for(REVERSE, 1.84*3, INCHES, 30, PERCENT)
+        dt.turn_for(RIGHT, 1.10*28, DEGREES, 40, PERCENT)
+        dt.drive_for(REVERSE, 1.84*26, INCHES, 55, PERCENT"""
+
+
 
 
     def _nothing(self):
@@ -392,9 +470,9 @@ class hawk_tuon:
 
     
     def _test(self):
-        gateKeeper.set(False)
+        pto.set(False)
         wait(3, SECONDS)
-        gateKeeper.toggle()
+        pto.toggle()
         
 
 
@@ -432,7 +510,10 @@ class hawk_tuon:
 
     def __call__(self):
         self._routine_selected()
-    
+
+
+#def toggle_indexer_direction():
+    #indexer.set_reversed(indexer.direction == DirectionType.FORWARD)
 
 def innit():
     menu = SelectionMenu()
@@ -447,14 +528,19 @@ def innit():
     menu.draw()
     print("\033[2J")
 
+    dt.set_stopping(COAST)
+
+
+def hood_pto_link():
+    pto.set(not in_da_hood.state)
 
 def drunk_driver():
     left_group.set_stopping(COAST)
     right_group.set_stopping(COAST)
 
-    #control for the 5.5w
-    #controller.buttonR2.pressed(weirdo.spin, (FORWARD, 55, PERCENT))
-    #controller.buttonR2.released(weirdo.spin, (FORWARD, 0, PERCENT))
+    #control for the 5.5w indexer
+    #controller.buttonR2.pressed(indexer.spin, (FORWARD, 100, PERCENT))
+    #controller.buttonR2.released(indexer.spin, (FORWARD, 0, PERCENT))
 
     #control for top scoring
     controller.buttonL1.pressed(spinners.spin, (REVERSE, 100, PERCENT))
@@ -465,14 +551,15 @@ def drunk_driver():
     controller.buttonL2.released(bottom.spin, (FORWARD, 0, PERCENT))
 
     #control for intake and middle scoring
-    controller.buttonR1.pressed(top.spin, (FORWARD, 66, PERCENT))
+    controller.buttonR1.pressed(top.spin, (FORWARD, 100, PERCENT))
     controller.buttonR1.released(top.spin, (FORWARD, 0, PERCENT))
-    controller.buttonR1.pressed(bottom.spin, (REVERSE, 80, PERCENT))
+    controller.buttonR1.pressed(bottom.spin, (REVERSE, 100, PERCENT))
     controller.buttonR1.released(bottom.spin, (REVERSE, 0, PERCENT))
 
     #pistons
-    controller.buttonRight.pressed(gateKeeper.toggle)
+    controller.buttonRight.pressed(pto.toggle)
     controller.buttonY.pressed(in_da_hood.toggle)
+    controller.buttonY.pressed(hood_pto_link)
     controller.buttonB.pressed(little_willy.toggle)
     controller.buttonDown.pressed(red_bull.toggle)
 
