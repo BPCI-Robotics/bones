@@ -336,7 +336,7 @@ class hawk_tuon:
             dt.drive_for(FORWARD, 1.84*3, INCHES, 10, PERCENT)
             dt.turn_for(RIGHT, 1.10*3, DEGREES, 30, PERCENT)
             wait(1, SECONDS)
-            dt.turn_for(RIGHT, 73, DEGREES, 70, PERCENT)
+            dt.turn_for(RIGHT, 70, DEGREES, 70, PERCENT)
 
             dt.drive_for(FORWARD, 1.84*3.5, INCHES, 30, PERCENT)
             dt.drive_for(FORWARD, 1.84*5.5, INCHES, 65, PERCENT)
@@ -346,7 +346,7 @@ class hawk_tuon:
             bottom.spin(REVERSE, 100, PERCENT)
 
             in_da_hood.toggle()
-            pto.toggle()
+            pto.set(False)
             
 
         
@@ -412,8 +412,9 @@ class hawk_tuon:
         bottom.spin(FORWARD, 100, PERCENT)
         dt.drive_for(REVERSE, 1.84*4, INCHES, 100, PERCENT, True)
         dt.drive_for(FORWARD, 1.84*6.7, INCHES,100, PERCENT, True)
-        wait (0.2, SECONDS)        
-        dt.drive_for(FORWARD, 1.84*24, INCHES,100, PERCENT, True)
+        wait (0.1, SECONDS)        
+        dt.drive_for(FORWARD, 1.84*4, INCHES, 80, PERCENT)
+        dt.drive_for(FORWARD, 1.84*20, INCHES, 50, PERCENT, True)
 
         """dt.drive_for(FORWARD, 1.84*31.85, INCHES, 30, PERCENT)
         wait(0.5, SECONDS)
