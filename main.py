@@ -245,7 +245,7 @@ class hawk_tuon:
         #top.spin(REVERSE, 100, PERCENT)
 
         if self.direction == LEFT:
-            
+
             red_bull.set(False)
             little_willy.set(False)
             middle.set(False)
@@ -258,35 +258,53 @@ class hawk_tuon:
             dt.drive_for(FORWARD, 2, INCHES, 66, PERCENT, True)
             dt.turn_for(LEFT, 1.10*20, DEGREES, 66, PERCENT, True)
             wait(0.1, SECONDS)
-            dt.drive_for(FORWARD, 39, INCHES, 66, PERCENT, True)
+            dt.drive_for(FORWARD, 42, INCHES, 40, PERCENT, True)
+            wait(0.1, SECONDS)
+            dt.turn_for(RIGHT, 1.10*20, DEGREES, 66, PERCENT)
+            dt.turn_for(RIGHT, 1.10*89, DEGREES, 66, PERCENT)
+            dt.turn_for(RIGHT, 1.10*89, DEGREES, 66, PERCENT)
+            little_willy.set(True)
+            dt.turn_for(RIGHT, 1.10*35, DEGREES, 66, PERCENT)
+            dt.drive_for(FORWARD, 59.5, INCHES, 66, PERCENT)
+            dt.turn_for(LEFT, 1.10*58, DEGREES, 66, PERCENT)
+            dt.drive_for(FORWARD, 17.5, INCHES, 40, PERCENT)
+            wait(0.5, SECONDS)
+
+            for i in range(0,1):
+                dt.drive_for(REVERSE, 2.3, INCHES, 40, PERCENT)
+                wait(0.3, SECONDS)
+                dt.drive_for(FORWARD, 2.3, INCHES, 40, PERCENT)
+
+            dt.turn_for(LEFT, 1.10*3.5, DEGREES, 70, PERCENT)
+            dt.drive_for(REVERSE, 48, INCHES, 66, PERCENT)
+            top.spin(FORWARD, 100, PERCENT)
+            #wait(4, SECONDS)
+            #top.spin(FORWARD, 0, PERCENT)
+            #dt.drive_for(FORWARD, 5, INCHES, 50, PERCENT)
+            #dt.drive_for(REVERSE, 5, INCHES, 90, PERCENT) 
+            
+            """red_bull.set(False)
+            little_willy.set(False)
+            middle.set(False)
+
+            top.set_stopping(HOLD)
+            top.spin(FORWARD, 0, PERCENT)
+            bottom.spin(FORWARD, 100, PERCENT)
+
+
+            dt.drive_for(FORWARD, 2, INCHES, 66, PERCENT, True)
+            dt.turn_for(LEFT, 1.10*20, DEGREES, 66, PERCENT, True)
+            wait(0.1, SECONDS)
+            dt.drive_for(FORWARD, 42, INCHES, 66, PERCENT, True)
             dt.turn_for(LEFT, 1.10*89, DEGREES, 66, PERCENT, True)
-            dt.turn_for(LEFT, 1.10*43, DEGREES, 66, PERCENT, True)
+            dt.turn_for(LEFT, 1.10*41, DEGREES, 66, PERCENT, True)
             wait(0.2, SECONDS)
-            dt.drive_for(REVERSE, 21, INCHES, 66, PERCENT, True)
+            dt.drive_for(REVERSE, 21, INCHES, 50, PERCENT, True)
             middle.set(True)
             bottom.spin(FORWARD, 70, PERCENT)
             top.spin(FORWARD, 30, PERCENT)
-            wait(3, SECONDS)
-            top.spin(FORWARD, 0, PERCENT)
-            middle.set(False)
-            dt.drive_for(FORWARD, 18, INCHES, 80, PERCENT)
-            dt.turn_for(RIGHT, 1.10*10, DEGREES, 70, PERCENT)
-            dt.drive_for(FORWARD, 68, INCHES, 67, PERCENT, True)
-            dt.turn_for(LEFT, 70, DEGREES, 70, PERCENT)
-            little_willy.set(True)
-            dt.drive_for(FORWARD, 12, INCHES, 66, PERCENT, True)
-            wait(0.5, SECONDS)
-            dt.drive_for(REVERSE, 28, INCHES, 66, PERCENT, True)
-            top.spin(FORWARD, 100, PERCENT)
-            #dt.turn_for(LEFT, 1.10*45, DEGREES, 66, PERCENT)
-            #dt.drive_for(REVERSE, 1.84*4, INCHES, 66, PERCENT)
-            #middle.set(False) #change based on piston values
+            wait(2, SECONDS)"""
 
-            #top.spin(FORWARD, 100, PERCENT)
-            #wait(1.5, SECONDS)
-
-            #middle.set(True)
-            #top.stop()
 
             #dt.drive_for(FORWARD, 1.84*32, INCHES, 80, PERCENT)
             #dt.turn_for(LEFT, 1.84*45, DEGREES, 80, PERCENT)
@@ -301,89 +319,46 @@ class hawk_tuon:
             #wait(3, SECONDS)
 
 
-
-
-
-
-             
-            """in_da_hood.set(False)
-            red_bull.set(False)
-            little_willy.set(False)
-            pto.set(True)
-
-
-            #NOTED TO SELF
-            #gate is closed, value = False
-            #hood is up, value = False
-
-            bottom.spin(REVERSE, 100, PERCENT)
-            top.spin(REVERSE, 100, PERCENT)
-
-            
-            dt.drive_for(FORWARD, 1.84*3, INCHES, 30, PERCENT, True)
-            dt.drive_for(FORWARD, 1.84*5.5, INCHES, 55, PERCENT, True)
-            dt.drive_for(FORWARD, 1.84*3.5, INCHES, 20, PERCENT, True)
-            wait(0.25, SECONDS)
-            dt.turn_for(LEFT, 1.10*22, DEGREES, 15, PERCENT, True)
-            dt.drive_for(FORWARD, 1.84*5, INCHES, 10, PERCENT, True)
-            dt.turn_for(LEFT, 1.10*10, DEGREES, 15, PERCENT, True)
-            dt.drive_for(FORWARD, 1.84*7, INCHES, 10, PERCENT, True)
-            dt.turn_for(LEFT, 1.10*3, DEGREES, 15, PERCENT, True)
-            dt.drive_for(FORWARD, 1.84*3, INCHES, 10, PERCENT)
-            dt.turn_for(RIGHT, 1.10*3, DEGREES, 30, PERCENT)
-            wait(1, SECONDS)
-            dt.turn_for(RIGHT, 70, DEGREES, 70, PERCENT)
-
-            dt.drive_for(FORWARD, 1.84*3.5, INCHES, 30, PERCENT)
-            dt.drive_for(FORWARD, 1.84*5.5, INCHES, 65, PERCENT)
-            dt.drive_for(FORWARD, 1.84*3.8, INCHES, 40, PERCENT)
-            
-            top.spin(FORWARD, 50, PERCENT)
-            bottom.spin(REVERSE, 100, PERCENT)
-
-            in_da_hood.toggle()
-            pto.set(False)"""
-            
-
         
         elif self.direction == RIGHT:
-            """in_da_hood.set(False)
             red_bull.set(False)
             little_willy.set(False)
-            pto.set(True)
+            middle.set(False)
+
+            top.set_stopping(HOLD)
+            top.spin(FORWARD, 0, PERCENT)
+            bottom.spin(FORWARD, 100, PERCENT)
 
 
-            #NOTED TO SELF
-            #gate is closed, value = False
-            #hood is up, value = False
+            dt.drive_for(FORWARD, 2, INCHES, 66, PERCENT, True)
+            dt.turn_for(RIGHT, 1.10*20, DEGREES, 66, PERCENT, True)
+            wait(0.1, SECONDS)
+            dt.drive_for(FORWARD, 42, INCHES, 40, PERCENT, True)
+            wait(0.1, SECONDS)
+            dt.turn_for(LEFT, 1.10*20, DEGREES, 66, PERCENT)
+            dt.turn_for(LEFT, 1.10*89, DEGREES, 66, PERCENT)
+            dt.turn_for(LEFT, 1.10*89, DEGREES, 66, PERCENT)
+            little_willy.set(True)
+            dt.turn_for(LEFT, 1.10*35, DEGREES, 66, PERCENT)
+            dt.drive_for(FORWARD, 59.5, INCHES, 66, PERCENT)
+            dt.turn_for(RIGHT, 1.10*60, DEGREES, 66, PERCENT)
+            dt.drive_for(FORWARD, 17, INCHES, 40, PERCENT)
+            wait(0.5, SECONDS)
 
-            bottom.spin(REVERSE, 100, PERCENT)
-            top.spin(REVERSE, 100, PERCENT)
+            for i in range(0,1):
+                dt.drive_for(REVERSE, 2.3, INCHES, 40, PERCENT)
+                wait(0.3, SECONDS)
+                dt.drive_for(FORWARD, 2.3, INCHES, 40, PERCENT)
+
+            dt.turn_for(RIGHT, 1.10*3.5, DEGREES, 70, PERCENT)
+            dt.drive_for(REVERSE, 48, INCHES, 66, PERCENT)
+            top.spin(FORWARD, 100, PERCENT)
+            #wait(4, SECONDS)
+            #top.spin(FORWARD, 0, PERCENT)
+            #dt.drive_for(FORWARD, 5, INCHES, 50, PERCENT)
+            #dt.drive_for(REVERSE, 5, INCHES, 90, PERCENT)
 
             
-            dt.drive_for(FORWARD, 1.84*3, INCHES, 30, PERCENT, True)
-            dt.drive_for(FORWARD, 1.84*5.5, INCHES, 75, PERCENT, True)
-            dt.drive_for(FORWARD, 1.84*3.5, INCHES, 20, PERCENT, True)
-            wait(0.25, SECONDS)
-            dt.turn_for(RIGHT, 1.10*22, DEGREES, 20, PERCENT, True)
-            dt.drive_for(FORWARD, 1.84*5, INCHES, 10, PERCENT, True)
-            dt.turn_for(RIGHT, 1.10*15, DEGREES, 15, PERCENT, True)
-            dt.drive_for(FORWARD, 1.84*7, INCHES, 10, PERCENT, True)
-            dt.turn_for(RIGHT, 1.10*16, DEGREES, 15, PERCENT, True)
-            dt.drive_for(FORWARD, 1.84*3, INCHES, 10, PERCENT)
-            dt.turn_for(LEFT, 1.10*8, DEGREES, 30, PERCENT)
-            wait(1, SECONDS)
-            dt.turn_for(LEFT, 93.5, DEGREES, 70, PERCENT)
-
-            dt.drive_for(FORWARD, 1.84*3.5, INCHES, 30, PERCENT)
-            dt.drive_for(FORWARD, 1.84*5.5, INCHES, 65, PERCENT)
-            dt.drive_for(FORWARD, 1.84*4.5, INCHES, 40, PERCENT)
-
-            top.spin(FORWARD, 0, PERCENT)
-            bottom.spin(FORWARD, 80, PERCENT)
-
-            in_da_hood.toggle()
-            pto.set(False)"""
 
 
         
@@ -458,7 +433,7 @@ class hawk_tuon:
         pto.set(False)
         wait(12, SECONDS)
 
-        pto.set(True)
+        .pto.set(True)
         dt.drive_for(REVERSE, 1.84*10, INCHES, 40, PERCENT)
         in_da_hood.toggle()
         dt.drive_for(REVERSE, 1.84*2, INCHES, 40, PERCENT)
@@ -486,13 +461,7 @@ class hawk_tuon:
         #wait(5, SECONDS)
         #middle.set(True)
 
-        dt.drive_for(FORWARD, 1.84*28, INCHES, 50, PERCENT)
-        dt.turn_for(LEFT, 1.10*89, DEGREES, 40, PERCENT)
-        dt.turn_for(LEFT, 1.10*15, DEGREES, 40, PERCENT)
-
-
-
-
+        dt.drive_for(FORWARD, 4, INCHES, 50, PERCENT)
 
     def set_config(self, config: dict[str, Any]):
         print(config)
