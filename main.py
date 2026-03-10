@@ -30,6 +30,12 @@ class SelectionMenu:
         self.enter_callback: Callable[[dict[str, Any]], None]
 
         brain.screen.pressed(self._on_brain_screen_press)
+        controller.buttonLeft.pressed(self._controller_button_left_pressed)
+        controller.buttonUp.pressed(self._controller_button_up_pressed)
+        controller.buttonX.pressed(self._controller_button_X_pressed)
+        controller.buttonA.pressed(self._controller_button_A_pressed)
+
+
 
         self.add_option("Enter", Color.WHITE, ["", "Are you sure?", "ENTERED"])
     
@@ -43,9 +49,70 @@ class SelectionMenu:
         self.options.insert(self.count - 1, SelectionMenu._Option(name, color, choices))
         self.count += 1
     
+    def _controller_button_left_pressed(self):
+        if self.disabled:
+            return
+        
+
+        self.options[0].next()
+
+        self.draw()
+        
+
+        if self.options[self.count - 1].value() == "ENTERED":
+            self.enter_callback(self._get_all())
+            self.disabled = True
+            return
+        
+
+    def _controller_button_up_pressed(self):
+        if self.disabled:
+            return
+        
+
+        self.options[1].next()
+        
+        self.draw()
+        
+
+        if self.options[self.count - 1].value() == "ENTERED":
+            self.enter_callback(self._get_all())
+            self.disabled = True
+            return
+
+
+    def _controller_button_X_pressed(self):
+        if self.disabled:
+            return
+        
+        self.options[2].next()
+
+        self.draw()
+        
+        if self.options[self.count - 1].value() == "ENTERED":
+            self.enter_callback(self._get_all())
+            self.disabled = True
+            return
+
+    def _controller_button_A_pressed(self):
+        if self.disabled:
+            return
+        
+        self.options[3].next()
+
+        self.draw()
+
+        if self.options[self.count - 1].value() == "ENTERED":
+            self.enter_callback(self._get_all())
+            self.disabled = True
+            return
+        
+
+
     def _on_brain_screen_press(self):
         if self.disabled:
             return
+            
         
         x = brain.screen.x_position()
         y = brain.screen.y_position()
@@ -159,11 +226,6 @@ class DigitalOutToggleable(DigitalOut):
         self.state = not self.state
         self.set(self.state)
 
-
-#Define robot parts
-brain=Brain()
-controller = Controller(PRIMARY)
-
 brain.screen.print("dont_select.py")
 
 top = Motor(Ports.PORT8, ALL_MOTOR_CARTRIDGE, True)
@@ -174,7 +236,14 @@ bottom = Motor(Ports.PORT7, ALL_MOTOR_CARTRIDGE, False)
 middle = DigitalOutToggleable(brain.three_wire_port.c)
 little_willy = DigitalOutToggleable(brain.three_wire_port.a)
 red_bull = DigitalOutToggleable(brain.three_wire_port.b)
+asian_parking = DigitalOutToggleable(brain.three_wire_port.d)
+gropper = DigitalOutToggleable(brain.three_wire_port.e)
 #spinners = MotorGroup(bottom, top)
+
+
+#optical
+#optical = Optical(Ports.PORT10)
+
 
 #bottom_spinner = spinner(bottom)
 
@@ -237,29 +306,36 @@ class hawk_tuon:
             dt.drive_for(FORWARD, 2, INCHES, 66, PERCENT, True)
             dt.turn_for(LEFT, 1.10*20, DEGREES, 66, PERCENT, True)
             wait(0.1, SECONDS)
-            dt.drive_for(FORWARD, 42, INCHES, 40, PERCENT, True)
+            dt.drive_for(FORWARD, 44.6, INCHES, 35, PERCENT, True)
             wait(0.1, SECONDS)
             dt.turn_for(RIGHT, 1.10*20, DEGREES, 66, PERCENT)
             dt.turn_for(RIGHT, 1.10*89, DEGREES, 66, PERCENT)
             dt.turn_for(RIGHT, 1.10*89, DEGREES, 66, PERCENT)
-            little_willy.set(True)
-            dt.turn_for(RIGHT, 1.10*35, DEGREES, 66, PERCENT)
-            dt.drive_for(FORWARD, 49, INCHES, 66, PERCENT)
-            dt.turn_for(LEFT, 1.10*68, DEGREES, 66, PERCENT)
-            dt.drive_for(FORWARD, 37, INCHES, 50, PERCENT)
-            wait(0.7, SECONDS)
+            dt.turn_for(RIGHT, 1.10*27, DEGREES, 66, PERCENT)
 
-            #for i in range(0,1):
-                #dt.drive_for(REVERSE, 4, INCHES, 70, PERCENT)
-                #wait(0.4, SECONDS)
-                #dt.drive_for(FORWARD, 4, INCHES, 70, PERCENT)
-            dt.drive_for(REVERSE, 4, INCHES, 55, PERCENT)
-            dt.turn_for(LEFT, 1.10*6, DEGREES, 70, PERCENT)
-            wait(0.7, SECONDS)
 
-            dt.drive_for(REVERSE, 40, INCHES, 55, PERCENT)
+            dt.drive_for(REVERSE, 27, INCHES, 70, PERCENT)
+            dt.drive_for(REVERSE, 2, INCHES, 30, PERCENT, wait=False)
+            wait(0.3, SECONDS)
+            middle.set(True)
             top.spin(FORWARD, 100, PERCENT)
-            dt.stop(COAST)
+            wait(1.2, SECONDS)
+            top.spin(FORWARD, 0, PERCENT)
+            middle.set(False)
+        
+            little_willy.set(True)
+            dt.drive_for(FORWARD, 89, INCHES, 70, PERCENT)
+            dt.turn_for(LEFT, 1.10*85, DEGREES, 50, PERCENT)
+
+            dt.drive_for(FORWARD, 35, INCHES, 50, PERCENT)
+            dt.stop(HOLD)
+            wait(0.5, SECONDS)
+
+            dt.turn_for(LEFT, 1.10*5, DEGREES, 50, PERCENT)
+            dt.drive_for(REVERSE, 55, INCHES, 50, PERCENT)
+            top.spin(FORWARD, 100, PERCENT)
+            
+
             #wait(4, SECONDS)..6;;
              
             #top.spin(FORWARD, 0, PERCENT)
@@ -409,11 +485,11 @@ class hawk_tuon:
         #dt.drive_for(REVERSE, 1.84*3, INCHES, 65, PERCENT)
         #dt.drive_for(FORWARD, 1.84*3.35, INCHES, 30, PERCENT)
         
-        in_da_hood.set(True)
-        pto.set(False)
+        # in_da_hood.set(True)
+        # pto.set(False)
         wait(12, SECONDS)
 
-        .pto.set(True)
+        # pto.set(True)
         dt.drive_for(REVERSE, 1.84*10, INCHES, 40, PERCENT)
         in_da_hood.toggle()
         dt.drive_for(REVERSE, 1.84*2, INCHES, 40, PERCENT)
@@ -428,8 +504,44 @@ class hawk_tuon:
 
 
 
-    def _nothing(self):
-        dt.drive_for(FORWARD, 1.84*3, INCHES, 20, PERCENT) 
+    def _solo_awp(self):
+        middle.set(False)
+        bottom.spin(FORWARD, 100, PERCENT)
+        top.spin(FORWARD, 0, PERCENT)
+        dt.drive_for(FORWARD, 6, INCHES, 75, PERCENT)
+        wait(0.3, SECONDS)
+        dt.drive_for(REVERSE, 50, INCHES, 85, PERCENT)
+        wait(0.1, SECONDS)
+        dt.turn_for(LEFT, 1.10*89, DEGREES, 90, PERCENT)
+        dt.turn_for(LEFT, 1.10*15, DEGREES, 90, PERCENT)
+        little_willy.set(True)
+        dt.drive_for(FORWARD, 16, INCHES, 85, PERCENT)
+        wait(0.2, SECONDS)
+        dt.drive_for(REVERSE, 40, INCHES, 60, PERCENT)
+        top.spin(FORWARD, 100, PERCENT)
+
+        wait(4, SECONDS)
+        top.spin(FORWARD, 0, PERCENT)
+
+        little_willy.set(False)
+
+        dt.turn_for(LEFT, 1.10*89, DEGREES, 80, PERCENT)
+        dt.turn_for(LEFT, 1.10*15, DEGREES, 80, PERCENT)
+        dt.drive_for(FORWARD, 64, INCHES, 85, PERCENT)
+        dt.turn_for(LEFT, 1.10*55, DEGREES, 90, PERCENT)
+        dt.drive_for(REVERSE, 28, INCHES, 80, PERCENT)
+        top.spin(FORWARD, 100, PERCENT)
+        middle.set(True)
+        wait(1, SECONDS)
+        middle.set(False)
+        top.spin(FORWARD, 0, PERCENT)
+        dt.drive_for(FORWARD, 4, INCHES, 90, PERCENT)
+        dt.turn_for(LEFT, 1.10*45, DEGREES, 90, PERCENT)
+        dt.drive_for(FORWARD, 40, INCHES, 80, PERCENT)
+
+        
+
+
 
     
     def _test(self):
@@ -465,8 +577,8 @@ class hawk_tuon:
         elif config['Auton type'] == "Elims":
             self._routine_selected = self._elims
 
-        elif config['Auton type'] == "Nothing":
-            self._routine_selected = self._nothing
+        elif config['Auton type'] == "Solo AWP":
+            self._routine_selected = self._solo_awp
 
         elif config["Auton type"] == "Test":
             self._routine_selected = self._test
@@ -479,11 +591,24 @@ class hawk_tuon:
 #def toggle_indexer_direction():
     #indexer.set_reversed(indexer.direction == DirectionType.FORWARD)
 
+"""def colour_detection():
+    while True:
+        wait(120, MSEC)
+        # Only check when intake is actually running
+        if bottom.velocity(PERCENT) > 5:
+            if optical.is_near_object() and (optical.hue() >= 350 and optical.hue() <= 25):
+                print("Object detected!")
+                # Fire the reject shot without blocking the thread
+                top.spin_for(REVERSE, 1, SECONDS, 100, PERCENT)
+                wait(200, MSEC)  # debounce so it doesn't fire repeatedly"""
+            
+
+
 def innit():
     menu = SelectionMenu()
     menu.add_option("Colour", Color.RED, ["Red", "Blue"])
     menu.add_option("Auton direction", Color.BLUE, ["Left", "Right"])
-    menu.add_option("Auton type", Color.PURPLE, ["Quals", "Elims", "Skills", "Nothing", "Test"])
+    menu.add_option("Auton type", Color.PURPLE, ["Quals", "Elims", "Skills", "Solo AWP", "Test"])
 
     menu.on_enter(hawk_tuah.set_config)
 
@@ -493,18 +618,6 @@ def innit():
     print("\033[2J")
 
     dt.set_stopping(COAST)
-
-
-
-def drunk_driver():
-    left_group.set_stopping(COAST)
-    right_group.set_stopping(COAST)
-
-    top.set_stopping(HOLD)
-
-    #control for the 5.5w indexer
-    #controller.buttonR2.pressed(indexer.spin, (FORWARD, 100, PERCENT))
-    #controller.buttonR2.released(indexer.spin, (FORWARD, 0, PERCENT))
 
     #control for basic intake
     controller.buttonL1.pressed(bottom.spin, (FORWARD, 100, PERCENT))
@@ -532,7 +645,20 @@ def drunk_driver():
     #pistons
     controller.buttonRight.pressed(red_bull.toggle)
     controller.buttonY.pressed(little_willy.toggle)
-    controller.buttonDown.pressed(middle.toggle)
+    controller.buttonDown.pressed(asian_parking.toggle)
+    controller.buttonB.pressed(gropper.toggle)
+
+    #optical
+    #optical.set_light(LedStateType.ON)
+    #optical.set_light_power(100, PERCENT)
+
+
+def drunk_driver():
+    #Thread(colour_detection)
+
+    left_group.set_stopping(COAST)
+    right_group.set_stopping(COAST)
+    top.set_stopping(HOLD)
 
     while True:
         speed_stick = controller.axis3.position()
@@ -540,11 +666,11 @@ def drunk_driver():
 
         left_velocity = speed_stick + turn_stick
         right_velocity = speed_stick - turn_stick
+
         left_group.spin(FORWARD, left_velocity, PERCENT)
         right_group.spin(FORWARD, right_velocity, PERCENT)
 
-        #print(weirdo.motor.torque(), top.torque())
-        #the previous line was just used for testing
+        wait(10, MSEC)
 
 
 """def scale_degrees(n):
@@ -563,3 +689,4 @@ hawk_tuah = hawk_tuon()
 
 competition = Competition(drunk_driver, hawk_tuah)
 innit()
+
