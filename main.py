@@ -306,15 +306,12 @@ class hawk_tuon:
             dt.drive_for(FORWARD, 2, INCHES, 66, PERCENT, True)
             dt.turn_for(LEFT, 1.10*20, DEGREES, 66, PERCENT, True)
             wait(0.1, SECONDS)
-            dt.drive_for(FORWARD, 44.6, INCHES, 35, PERCENT, True)
+            dt.drive_for(FORWARD, 44, INCHES, 35, PERCENT, True)
             wait(0.1, SECONDS)
-            dt.turn_for(RIGHT, 1.10*20, DEGREES, 66, PERCENT)
-            dt.turn_for(RIGHT, 1.10*89, DEGREES, 66, PERCENT)
-            dt.turn_for(RIGHT, 1.10*89, DEGREES, 66, PERCENT)
-            dt.turn_for(RIGHT, 1.10*27, DEGREES, 66, PERCENT)
+            dt.turn_for(LEFT, 120, DEGREES, 66, PERCENT)
 
 
-            dt.drive_for(REVERSE, 27, INCHES, 70, PERCENT)
+            dt.drive_for(REVERSE, 24.5, INCHES, 70, PERCENT)
             dt.drive_for(REVERSE, 2, INCHES, 30, PERCENT, wait=False)
             wait(0.3, SECONDS)
             middle.set(True)
@@ -324,14 +321,14 @@ class hawk_tuon:
             middle.set(False)
         
             little_willy.set(True)
-            dt.drive_for(FORWARD, 89, INCHES, 70, PERCENT)
-            dt.turn_for(LEFT, 1.10*85, DEGREES, 50, PERCENT)
+            dt.drive_for(FORWARD, 92, INCHES, 70, PERCENT)
+            dt.turn_for(LEFT, 1.10*86, DEGREES, 50, PERCENT)
 
-            dt.drive_for(FORWARD, 35, INCHES, 50, PERCENT)
+            dt.drive_for(FORWARD, 32, INCHES, 50, PERCENT)
             dt.stop(HOLD)
             wait(0.5, SECONDS)
 
-            dt.turn_for(LEFT, 1.10*5, DEGREES, 50, PERCENT)
+            dt.turn_for(RIGHT, 1.10*5, DEGREES, 50, PERCENT)
             dt.drive_for(REVERSE, 55, INCHES, 50, PERCENT)
             top.spin(FORWARD, 100, PERCENT)
             
