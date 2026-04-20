@@ -191,6 +191,8 @@ DRIVETRAIN_SCALE_FACTOR = 1.84 #for auton
 
 i_hate_MU = Inertial(Ports.PORT15)
 
+
+
 right_group = MotorGroup(
     Motor(Ports.PORT4, ALL_MOTOR_CARTRIDGE, False), 
     Motor(Ports.PORT5, ALL_MOTOR_CARTRIDGE, False),
@@ -199,7 +201,7 @@ right_group = MotorGroup(
 
 left_group = MotorGroup(
     Motor(Ports.PORT1, ALL_MOTOR_CARTRIDGE, True),
-    Motor(Ports.PORT2, ALL_MOTOR_CARTRIDGE, True), 
+    Motor(Ports.PORT2, ALL_MOTOR_CARTRIDGE, True),
     Motor(Ports.PORT3, ALL_MOTOR_CARTRIDGE, True)
 )
 
@@ -265,12 +267,218 @@ def capture_heading():
 
     dt.turn_for(direction, abs(error) + 13, DEGREES, vel, PERCENT)"""
     
-def turn_to_heading(heading):
-    while abs(heading - capture_heading()) > 0.4:
+def turn_to_heading(heading, stopping):
+
+    print("Initial heading: ", capture_heading())
+    
+
+    while abs(heading - capture_heading()) > 0.2:
+
+        error = heading - capture_heading()
+        
+        if error > 180: 
+            error -= 360
+        elif error < -180:
+            error += 360
+
+
+        if (error > 180):
+            break
+
+        if (error < -180):
+            break
+
+
+
+        if abs(error) <= 0.3:
+            dt.stop(stopping)
+            break
+
+
+        vel = 130*(abs(error)/180) 
+
+        if vel <= 1:
+            vel = 1
+
+        if vel >= 100:
+            vel = 100
+
+        
+        if error > 0:
+            direction = RIGHT
+
+        elif error < 0:
+            direction = LEFT
+
+        dir_print = "L" if direction == LEFT else "R"
+       
+        dt.turn(direction, vel, PERCENT)
+
+        print("H: ", round(i_hate_MU.heading(), 2), " E: ", round(error, 2), " D: ", dir_print, "V: ", round(vel, 2))
+        wait(20, MSEC)
+
+
+def calc_angle_error(heading):
+
+    angle_error = heading - i_hate_MU.heading()
+
+    if angle_error > 180:
+        angle_error -= 360
+    
+    elif angle_error < -180:
+        angle_error += 360
+
+    dir = LEFT if angle_error < 0 else RIGHT
+
+    angle_error = abs(angle_error)
+
+
+    return [angle_error, dir]
+
+def calc_r(dist, heading):
+
+    r = (dist)/(2*math.sin(math.radians((calc_angle_error(heading)[0])/2)))
+
+    return r
+
+
+left_pos = left_group.position(DEGREES)
+right_pos = right_group.position(DEGREES)
+
+def dist_trav():
+    global left_pos, right_pos
+
+    left_trav = left_group.position(DEGREES) - left_pos
+    right_trav = right_group.position(DEGREES) - right_pos
+
+    left_trav /= 360
+    right_trav /= 360
+
+    left_trav *= dt.__getattribute__("wheelTravel")
+    right_trav *= dt.__getattribute__("wheelTravel")
+
+    trav = (left_trav + right_trav) / 2.0
+    trav /= 25.4
+
+    return trav
+
+def update_pos():
+    global left_pos, right_pos
+    left_pos = left_group.position(DEGREES)
+    right_pos = right_group.position(DEGREES)
+    
+
+def drive_heading(t_dist, t_heading, speed, stop):
+    
+    left_group.reset_position()
+    right_group.reset_position()
+
+    r = calc_r(t_dist, t_heading)
+
+    curve_length = r*math.radians(calc_angle_error(t_heading)[0])
+
+    forward = speed
+    turn = forward/r
+
+    while abs(curve_length - dist_trav()) > 0.1 or abs(t_heading - i_hate_MU.heading()) > 0.3:
+        dist_error = curve_length - dist_trav()
+        angle_error = calc_angle_error(t_heading)[0]
+
+        update_pos()
+
+        forward += dist_error
+        turn += 50*(angle_error)/180
+
+        forward *= math.cos(math.radians(angle_error))
+
+        left = forward - turn
+        right = forward + turn
+
+        if left > 100:
+            left *= 100/left
+            right *= 100/left
+
+        elif right > 100:
+            left *= 100/right
+            right *= 100/right
+
+
+        left_group.spin(FORWARD, left, PERCENT)
+        right_group.spin(FORWARD, right, PERCENT)
 
         wait(20, MSEC)
 
-        current = capture_heading()
+        
+
+    
+
+
+
+def iterative_correction(heading):
+
+    error = heading - capture_heading()
+    print("Heading: ", capture_heading())
+    print("Error: ", error)
+
+    """if original_direction == LEFT and error > 0:
+        direction = RIGHT
+
+    elif original_direction == LEFT and error < 0:
+        direction = LEFT
+
+    elif original_direction == RIGHT and error > 0:
+        direction = RIGHT
+    
+    elif original_direction == RIGHT and error < 0:
+        direction = LEFT"""
+
+    
+    dt.turn_for(RIGHT, error, DEGREES, 40, PERCENT)
+    wait(20, MSEC)
+
+
+
+
+
+
+
+    """while abs(heading - i_hate_MU.heading()) > 0.3:
+
+        wait(20, MSEC)
+
+
+        current = i_hate_MU.heading(DEGREES)
+        print(current)
+
+        error = heading - current
+
+        if error > 180:
+            error -= 360
+
+        elif error < -180:
+            error += 360
+
+        print("Difference: ", error)
+
+        direction = LEFT if error < 0 else RIGHT
+
+        if direction != original_direction:
+            dt.stop(HOLD)
+
+        print("Current direction: ", direction)
+
+        dt.turn_for(direction, error, DEGREES, (error/180 * 100), PERCENT)
+        print("Heading: ", i_hate_MU.heading())"""
+
+
+
+
+
+
+
+
+
+    """current = capture_heading()
         print(current)
 
         error = heading - current
@@ -282,14 +490,17 @@ def turn_to_heading(heading):
         print(error)
 
         direction = LEFT if error < 0 else RIGHT
+
+        if direction != original_direction:
+            dt.stop(HOLD)
+        
         print(direction)
 
-        vel = abs(error)/180
-        print(vel)
-
-        dt.turn(direction, vel, PERCENT)
+        dt.turn(direction, 50, PERCENT)
+        print("Heading: ", heading)"""
 
 def localize_x(direction):
+    global pose
     x = distance1.object_distance()
 
     if direction == RIGHT:
@@ -298,52 +509,22 @@ def localize_x(direction):
     if direction == LEFT:
         x_coord = 72 - x
 
-    return x_coord
+    pose[0] = x_coord
+
+    
 
 
 def localize_y():
+    global pose
     y = distance1.object_distance()
 
     y_coord = 72 - y
 
-    return y_coord
+    pose[1] = y_coord
 
-absolute_pose = [0, 0, 0] #x, y, theta
+pose = [0, 0, 0] #x, y, theta
 #theta is determined by IMU
-#x and y are determined by tracking wheels
-
-def drive_to_point():
-
-
-
-
-
-    """current = capture_heading()
-
-    if heading <= current:
-        if current - heading >= 180:
-            direction = RIGHT
-        else:
-            direction = LEFT
-
-
-    elif heading > current:
-        if heading - current >= 180:
-            direction = RIGHT
-        else: 
-            direction = LEFT
-
-
-    while abs(heading - i_hate_MU.heading(DEGREES)) >= 1.5:
-        dt.turn(direction, (2*(heading - i_hate_MU.heading(DEGREES))/360), PERCENT)
-        wait(20, MSEC)"""
-
-
-
-    
-    
-
-
+#x and y are determined by tracking wheel
     
 
 
@@ -406,77 +587,50 @@ class hawk_tuon:
 
 
             dt.drive_for(FORWARD, 2, INCHES, 66, PERCENT, True)
-            dt.turn_for(LEFT, 1.10*20, DEGREES, 66, PERCENT, True)
+            dt.turn_for(LEFT, 1.1*20, DEGREES, 80, PERCENT, True)
+            turn_to_heading(340, HOLD)
+            print("Heading after auton turn 1: ", capture_heading())
             wait(0.1, SECONDS)
-            dt.drive_for(FORWARD, 47, INCHES, 35, PERCENT, True)
+            dt.drive_for(FORWARD, 46, INCHES, 50, PERCENT, True)
             wait(0.1, SECONDS)
-            dt.turn_for(LEFT, 105, DEGREES, 66, PERCENT)
+            dt.drive_for(REVERSE, 3, INCHES, 45, PERCENT, True)
+            wait(0.1, SECONDS)
+            dt.turn_for(LEFT, 1.1*122, DEGREES, 90, PERCENT, True)
+            turn_to_heading(218, HOLD)
+            print("Heading after auton turn 2: ", capture_heading())
+            little_willy.set(True)
 
 
-            dt.drive_for(REVERSE, 20, INCHES, 70, PERCENT)
-            dt.drive_for(REVERSE, 3, INCHES, 30, PERCENT, wait=False)
+            dt.drive_for(REVERSE, 26, INCHES, 80, PERCENT)
+            dt.drive_for(REVERSE, 3, INCHES, 35, PERCENT, wait=False)
             wait(0.4, SECONDS)
             middle.set(True)
             top.spin(FORWARD, 100, PERCENT)
-            wait(1.2, SECONDS)
+            wait(1.7, SECONDS)
             top.spin(FORWARD, 0, PERCENT)
             middle.set(False)
 
             dt.drive_for(FORWARD, 3, INCHES, 30, PERCENT)
-            dt.turn_for(LEFT, 7, DEGREES, 50, PERCENT)
+            turn_to_heading(230, HOLD)
 
             little_willy.set(True)
-            dt.drive_for(FORWARD, 88, INCHES, 70, PERCENT)
-            dt.turn_for(LEFT, 1.10*74, DEGREES, 50, PERCENT)
+            dt.drive_for(FORWARD, 80, INCHES, 85, PERCENT)
+            dt.turn_for(LEFT, 1.10*50, DEGREES, 86, PERCENT, True)
+            turn_to_heading(180, HOLD)
 
-            dt.drive_for(FORWARD, 20, INCHES, 50, PERCENT)
+            dt.drive_for(FORWARD, 27, INCHES, 55, PERCENT)
             dt.stop(HOLD)
             wait(0.5, SECONDS)
 
-            dt.drive_for(REVERSE, 52, INCHES, 50, PERCENT)
+            turn_to_heading(180, HOLD)
+
+            dt.drive_for(REVERSE, 48, INCHES, 60, PERCENT)
             top.spin(FORWARD, 100, PERCENT)
+            wait(1.5, SECONDS)
+
+            dt.drive_for(FORWARD, 8, INCHES, 90, PERCENT)
+            dt.drive_for(REVERSE, 8, INCHES, 90, PERCENT)
             
-
-            #wait(4, SECONDS)..6;;
-             
-            #top.spin(FORWARD, 0, PERCENT)
-            #dt.drive_for(FORWARD, 5, INCHES, 50, PERCENT)
-            #dt.drive_for(REVERSE, 5, INCHES, 90, PERCENT) 
-            
-            """red_bull.set(False)
-            little_willy.set(False) 
-            middle.set(False)
-
-            top.set_stopping(HOLD)
-            top.spin(FORWARD, 0, PERCENT)
-            bottom.spin(FORWARD, 100, PERCENT)
-
-
-            dt.drive_for(FORWARD, 2, INCHES, 66, PERCENT, True)
-            dt.turn_for(LEFT, 1.10*20, DEGREES, 66, PERCENT, True)
-            wait(0.1, SECONDS)
-            dt.drive_for(FORWARD, 42, INCHES, 66, PERCENT, True)
-            dt.turn_for(LEFT, 1.10*89, DEGREES, 66, PERCENT, True)
-            dt.turn_for(LEFT, 1.10*41, DEGREES, 66, PERCENT, True)
-            wait(0.2, SECONDS)
-            dt.drive_for(REVERSE, 21, INCHES, 50, PERCENT, True)
-            middle.set(True)
-            bottom.spin(FORWARD, 70, PERCENT)
-            top.spin(FORWARD, 30, PERCENT)
-            wait(2, SECONDS)"""
-
-
-            #dt.drive_for(FORWARD, 1.84*32, INCHES, 80, PERCENT)
-            #dt.turn_for(LEFT, 1.84*45, DEGREES, 80, PERCENT)
-            #little_willy.set(True)
-
-            #dt.drive_for(FORWARD, 1.84*10, INCHES, 60, PERCENT)
-            #wait(0.4, SECONDS)
-            #dt.drive_for(REVERSE, 1.84*6, INCHES, 70, PERCENT)
-            #little_willy.set(False)
-            #dt.drive_for(REVERSE, 1.84*24, INCHES, 80, PERCENT)
-            #top.spin(FORWARD, 100, PERCENT)
-            #wait(3, SECONDS)
 
 
         
@@ -491,15 +645,14 @@ class hawk_tuon:
 
 
             dt.drive_for(FORWARD, 2, INCHES, 66, PERCENT, True)
-            dt.turn_for(RIGHT, 1.10*20, DEGREES, 66, PERCENT, True)
+            dt.turn_for(RIGHT, 1.10*20, DEGREES, 90, PERCENT, True)
+            turn_to_heading(20, HOLD)
             wait(0.1, SECONDS)
             dt.drive_for(FORWARD, 42, INCHES, 40, PERCENT, True)
             wait(0.1, SECONDS)
-            dt.turn_for(LEFT, 1.10*20, DEGREES, 66, PERCENT)
-            dt.turn_for(LEFT, 1.10*89, DEGREES, 66, PERCENT)
-            dt.turn_for(LEFT, 1.10*89, DEGREES, 66, PERCENT)
+            dt.turn_for(RIGHT, 137, DEGREES, 90, PERCENT)
             little_willy.set(True)
-            dt.turn_for(LEFT, 1.10*35, DEGREES, 66, PERCENT)
+            turn_to_heading(140, HOLD)
             dt.drive_for(FORWARD, 56, INCHES, 66, PERCENT)
             dt.turn_for(RIGHT, 1.10*75, DEGREES, 66, PERCENT)
             dt.drive_for(FORWARD, 32, INCHES, 40, PERCENT)
@@ -610,54 +763,69 @@ class hawk_tuon:
 
 
     def _solo_awp(self):
-        middle.set(False)
-        bottom.spin(FORWARD, 100, PERCENT)
-        top.spin(FORWARD, 0, PERCENT)
-        dt.drive_for(FORWARD, 6, INCHES, 75, PERCENT)
-        wait(0.3, SECONDS)
-        dt.drive_for(REVERSE, 50, INCHES, 85, PERCENT)
-        wait(0.1, SECONDS)
-        dt.turn_for(LEFT, 1.10*89, DEGREES, 90, PERCENT)
-        dt.turn_for(LEFT, 1.10*15, DEGREES, 90, PERCENT)
-        little_willy.set(True)
-        dt.drive_for(FORWARD, 16, INCHES, 85, PERCENT)
-        wait(0.2, SECONDS)
-        dt.drive_for(REVERSE, 40, INCHES, 60, PERCENT)
-        top.spin(FORWARD, 100, PERCENT)
-
-        wait(4, SECONDS)
-        top.spin(FORWARD, 0, PERCENT)
-
+        i_hate_MU.set_heading(270)
+        red_bull.set(False)
         little_willy.set(False)
-
-        dt.turn_for(LEFT, 1.10*89, DEGREES, 80, PERCENT)
-        dt.turn_for(LEFT, 1.10*15, DEGREES, 80, PERCENT)
-        dt.drive_for(FORWARD, 64, INCHES, 85, PERCENT)
-        dt.turn_for(LEFT, 1.10*55, DEGREES, 90, PERCENT)
-        dt.drive_for(REVERSE, 28, INCHES, 80, PERCENT)
-        top.spin(FORWARD, 100, PERCENT)
-        middle.set(True)
-        wait(1, SECONDS)
         middle.set(False)
+        top.set_stopping(HOLD)
         top.spin(FORWARD, 0, PERCENT)
-        dt.drive_for(FORWARD, 4, INCHES, 90, PERCENT)
-        dt.turn_for(LEFT, 1.10*45, DEGREES, 90, PERCENT)
-        dt.drive_for(FORWARD, 40, INCHES, 80, PERCENT)
+        bottom.spin(FORWARD, 100, PERCENT)
 
+        dt.drive_for(FORWARD, 7, INCHES, 66, PERCENT)
+        wait(0.1, SECONDS)
+        dt.drive_for(REVERSE, 2, INCHES, 50, PERCENT)
+        dt.drive_for(REVERSE, 63, INCHES, 75, PERCENT)
+        dt.stop(HOLD)
+        wait(0.1, SECONDS)
+        dt.turn_for(LEFT, 1.1*90, DEGREES, 90, PERCENT)
+        little_willy.set(True)
+        turn_to_heading(180, HOLD)
+        dt.drive_for(FORWARD, 9, INCHES, 70, PERCENT)
+        wait(0.3, SECONDS)
+        turn_to_heading(180, HOLD)
+        dt.drive_for(REVERSE, 48, INCHES, 60, PERCENT)
+        top.spin(FORWARD, 100, PERCENT)
+        wait(2.5, SECONDS)
+        top.stop()
+
+        little_willy.set(True)
+        dt.turn_for(RIGHT, 1.10*135, DEGREES, 80, PERCENT, wait=False)
+        turn_to_heading(315, HOLD)
+        dt.drive_for(FORWARD, 24, INCHES, 75, PERCENT)
+        dt.turn_for(LEFT, 1.10*45, DEGREES, 75, PERCENT)
+        turn_to_heading(217, HOLD)
+
+
+
+
+        
+
+
+        
         
 
 
 
     
     def _test(self):
-        """pto.set(False)
-        wait(3, SECONDS)
-        pto.toggle()"""
 
+        print("Heading at the beginning: ", i_hate_MU.heading())
+        turn_to_heading(340, HOLD)
+        print("Heading after first turn: ", i_hate_MU.heading())
+        wait(2, SECONDS)
 
-        #middle.set(False)
-        #wait(5, SECONDS)
-        #middle.set(True)
+        turn_to_heading(0, HOLD)
+        print("Heading after second turn: ", i_hate_MU.heading())
+        wait(2, SECONDS)
+
+        turn_to_heading(235, HOLD)
+        print("Heading after third turn: ", i_hate_MU.heading())
+        wait(2, SECONDS)
+
+        turn_to_heading(0, HOLD)
+        print("Final heading: ", i_hate_MU.heading())
+        wait(2, SECONDS)
+
 
         
 
@@ -711,6 +879,37 @@ class hawk_tuon:
 
 
 def innit():
+
+    for i in range(1,3):     
+        line = 2
+        i_hate_MU.calibrate()
+        while i_hate_MU.is_calibrating():
+            brain.screen.set_cursor(line, 1)
+            brain.screen.print(i_hate_MU.heading())
+            line += 1
+            if line > 12:
+                brain.screen.clear_screen()
+                line = 1
+            wait(20, MSEC)
+
+    
+    wait(1, SECONDS)
+    val_1 = i_hate_MU.heading()
+
+    wait(500, MSEC)
+    val_2 = i_hate_MU.heading()
+
+
+    while abs(val_2 - val_1) >= 0.05:
+        brain.screen.next_row()
+        brain.screen.print("Calibration did not happen properly!")
+        i_hate_MU.calibrate()
+        while i_hate_MU.is_calibrating:
+            wait(20, MSEC)
+
+
+
+
     menu = SelectionMenu()
     menu.add_option("Colour", Color.RED, ["Red", "Blue"])
     menu.add_option("Auton direction", Color.BLUE, ["Left", "Right"])
@@ -795,4 +994,3 @@ hawk_tuah = hawk_tuon()
 
 competition = Competition(drunk_driver, hawk_tuah)
 innit()
-
