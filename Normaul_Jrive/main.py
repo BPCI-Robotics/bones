@@ -218,6 +218,7 @@ dt = DriveTrain( #SmartDrive
 )
 
 
+
 class DigitalOutToggleable(DigitalOut):
     def __init__(self, port, default_state=False):
         super().__init__(port)
@@ -313,6 +314,8 @@ def turn_to_heading(heading, stopping):
         dir_print = "L" if direction == LEFT else "R"
        
         dt.turn(direction, vel, PERCENT)
+        
+        
 
         print("H: ", round(i_hate_MU.heading(), 2), " E: ", round(error, 2), " D: ", dir_print, "V: ", round(vel, 2))
         wait(20, MSEC)
@@ -328,16 +331,20 @@ def calc_angle_error(heading):
     elif angle_error < -180:
         angle_error += 360
 
-    dir = LEFT if angle_error < 0 else RIGHT
+    d = LEFT if angle_error < 0 else RIGHT
 
     angle_error = abs(angle_error)
 
+    return {"angle": angle_error, "dir": d}
 
-    return [angle_error, dir]
+def calc_r(dist, theta):
 
-def calc_r(dist, heading):
+    angle = math.radians(theta/2)
 
-    r = (dist)/(2*math.sin(math.radians((calc_angle_error(heading)[0])/2)))
+    sin_calc = 2*math.sin(angle)
+    
+
+    r = dist/sin_calc
 
     return r
 
@@ -345,68 +352,46 @@ def calc_r(dist, heading):
 left_pos = left_group.position(DEGREES)
 right_pos = right_group.position(DEGREES)
 
-def dist_trav():
-    global left_pos, right_pos
+def calc_trav(r, theta):
 
-    left_trav = left_group.position(DEGREES) - left_pos
-    right_trav = right_group.position(DEGREES) - right_pos
+    angle = math.radians(theta)
 
-    left_trav /= 360
-    right_trav /= 360
+    left_trav = (r - (311/50.8))*angle # divide by 50.8 to convert to inches AND apply the 1/2 factor
+    left_trav *= 25.4 #convert from inches to mm
+    left_trav /= 82.55*math.pi #to get the number of rotations required, which we will then feed into the drive function
 
-    left_trav *= dt.__getattribute__("wheelTravel")
-    right_trav *= dt.__getattribute__("wheelTravel")
 
-    trav = (left_trav + right_trav) / 2.0
-    trav /= 25.4
+    right_trav = (r + (311/50.8))*angle
+    right_trav *= 25.4
+    right_trav /= 82.55*math.pi
 
-    return trav
 
-def update_pos():
-    global left_pos, right_pos
-    left_pos = left_group.position(DEGREES)
-    right_pos = right_group.position(DEGREES)
+    return {"L": left_trav, "R": right_trav}
+
+def drive_heading(t_dist, t_heading, speed, drive_dir):
     
+    #drive_dir is FORWARD or REVERSE
 
-def drive_heading(t_dist, t_heading, speed, stop):
+    data = calc_angle_error(t_heading)
+    error = data["angle"]
+    direction = data["dir"]
+
+    r = calc_r(t_dist, error)
+
+    trav = calc_trav(r, error)
+    sL = trav["L"]
+    sR = trav["R"]
+
+    if direction == RIGHT:
+        left_group.spin_for(drive_dir, sR, TURNS, speed, PERCENT, wait=False)
+        right_group.spin_for(drive_dir, sL, TURNS, speed, PERCENT)
+
+    else:
+        left_group.spin_for(drive_dir, sL, TURNS, speed, PERCENT, wait=False)
+        right_group.spin_for(drive_dir, sR, TURNS, speed, PERCENT)
+
+
     
-    left_group.reset_position()
-    right_group.reset_position()
-
-    r = calc_r(t_dist, t_heading)
-
-    curve_length = r*math.radians(calc_angle_error(t_heading)[0])
-
-    forward = speed
-    turn = forward/r
-
-    while abs(curve_length - dist_trav()) > 0.1 or abs(t_heading - i_hate_MU.heading()) > 0.3:
-        dist_error = curve_length - dist_trav()
-        angle_error = calc_angle_error(t_heading)[0]
-
-        update_pos()
-
-        forward += dist_error
-        turn += 50*(angle_error)/180
-
-        forward *= math.cos(math.radians(angle_error))
-
-        left = forward - turn
-        right = forward + turn
-
-        if left > 100:
-            left *= 100/left
-            right *= 100/left
-
-        elif right > 100:
-            left *= 100/right
-            right *= 100/right
-
-
-        left_group.spin(FORWARD, left, PERCENT)
-        right_group.spin(FORWARD, right, PERCENT)
-
-        wait(20, MSEC)
 
         
 
@@ -774,21 +759,23 @@ class hawk_tuon:
         dt.drive_for(FORWARD, 7, INCHES, 66, PERCENT)
         wait(0.1, SECONDS)
         dt.drive_for(REVERSE, 2, INCHES, 50, PERCENT)
-        dt.drive_for(REVERSE, 63, INCHES, 75, PERCENT)
+        dt.drive_for(REVERSE, 83, INCHES, 75, PERCENT)
         dt.stop(HOLD)
         wait(0.1, SECONDS)
         dt.turn_for(LEFT, 1.1*90, DEGREES, 90, PERCENT)
         little_willy.set(True)
         turn_to_heading(180, HOLD)
-        dt.drive_for(FORWARD, 9, INCHES, 70, PERCENT)
-        wait(0.3, SECONDS)
+        dt.drive_for(FORWARD, 20, INCHES, 70, PERCENT)
+        wait(0.5, SECONDS)
         turn_to_heading(180, HOLD)
         dt.drive_for(REVERSE, 48, INCHES, 60, PERCENT)
+        dt.stop(COAST)
+        dt.drive_for(FORWARD, 2, INCHES, 40, PERCENT)
         top.spin(FORWARD, 100, PERCENT)
         wait(2.5, SECONDS)
         top.stop()
 
-        little_willy.set(True)
+        little_willy.set(False)
         dt.turn_for(RIGHT, 1.10*135, DEGREES, 80, PERCENT, wait=False)
         turn_to_heading(315, HOLD)
         dt.drive_for(FORWARD, 24, INCHES, 75, PERCENT)
@@ -809,7 +796,7 @@ class hawk_tuon:
     
     def _test(self):
 
-        print("Heading at the beginning: ", i_hate_MU.heading())
+        """print("Heading at the beginning: ", i_hate_MU.heading())
         turn_to_heading(340, HOLD)
         print("Heading after first turn: ", i_hate_MU.heading())
         wait(2, SECONDS)
@@ -824,7 +811,10 @@ class hawk_tuon:
 
         turn_to_heading(0, HOLD)
         print("Final heading: ", i_hate_MU.heading())
-        wait(2, SECONDS)
+        wait(2, SECONDS)"""
+
+        dt.drive_for(FORWARD, 2, INCHES, 50, PERCENT, wait=True)
+        drive_heading(20, 150, 60, FORWARD)
 
 
         
@@ -900,7 +890,7 @@ def innit():
     val_2 = i_hate_MU.heading()
 
 
-    while abs(val_2 - val_1) >= 0.05:
+    if abs(val_2 - val_1) >= 0.05:
         brain.screen.next_row()
         brain.screen.print("Calibration did not happen properly!")
         i_hate_MU.calibrate()
