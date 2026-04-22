@@ -352,6 +352,8 @@ def calc_r(dist, theta):
 left_pos = left_group.position(DEGREES)
 right_pos = right_group.position(DEGREES)
 
+
+
 def calc_trav(r, theta):
 
     angle = math.radians(theta)
@@ -382,13 +384,23 @@ def drive_heading(t_dist, t_heading, speed, drive_dir):
     sL = trav["L"]
     sR = trav["R"]
 
-    if direction == RIGHT:
-        left_group.spin_for(drive_dir, sR, TURNS, speed, PERCENT, wait=False)
-        right_group.spin_for(drive_dir, sL, TURNS, speed, PERCENT)
+    if drive_dir == FORWARD:
+        if direction == RIGHT:
+            left_group.spin_for(drive_dir, sR, TURNS, speed, PERCENT, wait=False)
+            right_group.spin_for(drive_dir, sL, TURNS, speed, PERCENT)
+
+        else:
+            left_group.spin_for(drive_dir, sL, TURNS, speed, PERCENT, wait=False)
+            right_group.spin_for(drive_dir, sR, TURNS, speed, PERCENT)
 
     else:
-        left_group.spin_for(drive_dir, sL, TURNS, speed, PERCENT, wait=False)
-        right_group.spin_for(drive_dir, sR, TURNS, speed, PERCENT)
+        if direction == LEFT:
+            left_group.spin_for(drive_dir, sR, TURNS, speed, PERCENT, wait=False)
+            right_group.spin_for(drive_dir, sL, TURNS, speed, PERCENT)
+
+        else:
+            left_group.spin_for(drive_dir, sL, TURNS, speed, PERCENT, wait=False)
+            right_group.spin_for(drive_dir, sR, TURNS, speed, PERCENT)
 
 
     
@@ -759,40 +771,32 @@ class hawk_tuon:
         dt.drive_for(FORWARD, 7, INCHES, 66, PERCENT)
         wait(0.1, SECONDS)
         dt.drive_for(REVERSE, 2, INCHES, 50, PERCENT)
-        dt.drive_for(REVERSE, 83, INCHES, 75, PERCENT)
+        drive_heading(60, 200, 70, REVERSE)
+        #dt.drive_for(REVERSE, 83, INCHES, 75, PERCENT)
         dt.stop(HOLD)
         wait(0.1, SECONDS)
-        dt.turn_for(LEFT, 1.1*90, DEGREES, 90, PERCENT)
-        little_willy.set(True)
         turn_to_heading(180, HOLD)
-        dt.drive_for(FORWARD, 20, INCHES, 70, PERCENT)
+        little_willy.set(True)
+        wait(0.2, SECONDS)
+        dt.drive_for(FORWARD, 12, INCHES, 70, PERCENT)
         wait(0.5, SECONDS)
         turn_to_heading(180, HOLD)
-        dt.drive_for(REVERSE, 48, INCHES, 60, PERCENT)
+        dt.drive_for(REVERSE, 48, INCHES, 85, PERCENT)
         dt.stop(COAST)
-        dt.drive_for(FORWARD, 2, INCHES, 40, PERCENT)
+        dt.drive_for(FORWARD, 2, INCHES, 60, PERCENT)
         top.spin(FORWARD, 100, PERCENT)
-        wait(2.5, SECONDS)
+        wait(0.8, SECONDS)
         top.stop()
 
         little_willy.set(False)
-        dt.turn_for(RIGHT, 1.10*135, DEGREES, 80, PERCENT, wait=False)
-        turn_to_heading(315, HOLD)
-        dt.drive_for(FORWARD, 24, INCHES, 75, PERCENT)
-        dt.turn_for(LEFT, 1.10*45, DEGREES, 75, PERCENT)
-        turn_to_heading(217, HOLD)
-
-
-
-
-        
-
-
-        
-        
-
-
-
+        dt.turn_for(RIGHT, 1.10*90, DEGREES, 80, PERCENT, wait=False)
+        print("Heading after turn: ", i_hate_MU.heading())
+        drive_heading(24, 314, 75, FORWARD)
+        turn_to_heading(314, HOLD)
+        dt.drive_for(FORWARD, 10, INCHES, 80, PERCENT)
+        bottom.spin(REVERSE, 100, PERCENT)
+        wait(0.3, SECONDS)
+ 
     
     def _test(self):
 
@@ -813,8 +817,12 @@ class hawk_tuon:
         print("Final heading: ", i_hate_MU.heading())
         wait(2, SECONDS)"""
 
-        dt.drive_for(FORWARD, 2, INCHES, 50, PERCENT, wait=True)
-        drive_heading(20, 150, 60, FORWARD)
+        i_hate_MU.set_heading(270)
+        drive_heading(20, 330, 70, FORWARD)
+        print("Heading after curve: ", i_hate_MU.heading())
+        turn_to_heading(314, HOLD)
+        print("Final heading: ", i_hate_MU.heading())
+        
 
 
         
